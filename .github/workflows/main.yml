@@ -1,0 +1,58 @@
+name: Generate GitHub numbers and contribution snake
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/main.yml"
+      - "README.md"
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: github-numbers-and-snake
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Generate GitHub stats
+        uses: stats-organization/github-readme-stats-action@v2
+        with:
+          card: stats
+          options: username=michaelnvsx&show_icons=true&hide_border=true&locale=pt-br&theme=github_dark&title_color=4286F5&icon_color=4286F5
+          path: dist/github-stats.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate top languages
+        uses: stats-organization/github-readme-stats-action@v2
+        with:
+          card: top-langs
+          options: username=michaelnvsx&layout=compact&langs_count=6&size_weight=0.5&count_weight=0.5&hide_border=true&locale=pt-br&theme=github_dark&title_color=4286F5
+          path: dist/top-languages.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate contribution snake
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: michaelnvsx
+          outputs: |
+            dist/github-contribution-grid-snake.svg
+            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+
+      - name: Publish generated files
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: output
+          publish_dir: ./dist
